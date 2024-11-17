@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Korean Number Study</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            text-align: center;
+            background-color: #f9f9f9;
+            color: #333;
+            margin-top: 50px;
+        }
+        button {
+            padding: 15px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .sino, .native {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+        .sino:hover, .native:hover {
+            background-color: #d4d4d4;
+        }
+        .selected {
+            background-color: #4caf50;
+            color: white;
+        }
+        #start {
+            background-color: #2196f3;
+            color: white;
+            font-size: 1em;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        #start:hover {
+            background-color: #1976d2;
+        }
+        #number-display {
+            font-size: 4em;
+            margin: 20px;
+            font-weight: bold;
+        }
+        #answer {
+            margin-top: 20px;
+            color: #f44336;
+            font-size: 1.8em;
+        }
+        #backToConfig {
+            background-color: #f44336;
+            color: white;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        #backToConfig:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <h1>All About Korean Numbers</h1>
+    <div id="config">
+        <h2>Configuration</h2>
+        <div>
+            <button id="sinoButton" class="sino">Sino-Korean Numbers</button>
+            <button id="nativeButton" class="native">Native Korean Numbers</button>
+        </div>
+        <div>
+            <label for="from">From:</label>
+            <input type="number" id="from" value="1" style="width: 60px;">
+            <label for="to">To:</label>
+            <input type="number" id="to" value="99" style="width: 60px;">
+        </div>
+        <button id="start">Start</button>
+    </div>
+
+    <div id="study" style="display: none;">
+        <div id="number-display">1</div>
+        <button id="next">Next</button>
+        <button id="showAnswer">Answer</button>
+        <button id="backToConfig" style="background-color: #dc3545; color: white;">Back to Start</button>
+        <div id="answer"></div>
+    </div>
+
+    <script>
+        let selectedStyle = 'sino';
+        let currentNumber = 1;
+        let from = 1;
+        let to = 100;
+
+        const sinoNumbers = ["일", "이", "삼", "사", "오", "육", "칠", "팔", "구", "십"];
+        const nativeNumbers = ["하나", "둘", "셋", "넷", "다섯", "여섯", "일곱", "여덟", "아홉", "열"];
+
+        document.getElementById('sinoButton').addEventListener('click', function() {
+            selectedStyle = 'sino';
+            this.classList.add('selected');
+            document.getElementById('nativeButton').classList.remove('selected');
+        });
+
+        document.getElementById('nativeButton').addEventListener('click', function() {
+            selectedStyle = 'native';
+            this.classList.add('selected');
+            document.getElementById('sinoButton').classList.remove('selected');
+            document.getElementById('to').max = '99';
+        });
+
+        document.getElementById('start').addEventListener('click', function() {
+            from = parseInt(document.getElementById('from').value);
+            to = parseInt(document.getElementById('to').value);
+
+            if (!document.getElementById('sinoButton').classList.contains('selected') && !document.getElementById('nativeButton').classList.contains('selected')) {
+                alert('Please select either Sino-Korean numbers or Native Korean numbers.');
+                return;
+            }
+
+            if (selectedStyle === 'native' && to > 99) {
+                alert('The maximum value for native Korean numbers is 99.');
+                document.getElementById('to').value = 99;
+                return;
+            }
+
+            currentNumber = getRandomNumber(from, to);
+            document.getElementById('config').style.display = 'none';
+            document.getElementById('study').style.display = 'block';
+            updateNumberDisplay();
+        });
+
+        document.getElementById('next').addEventListener('click', function() {
+            currentNumber = getRandomNumber(from, to);
+            updateNumberDisplay();
+            document.getElementById('answer').innerText = '';
+        });
+
+        document.getElementById('showAnswer').addEventListener('click', function() {
+            const answer = selectedStyle === 'sino' ? getSinoKorean(currentNumber) : getNativeKorean(currentNumber);
+            const answerElement = document.getElementById('answer');
+            answerElement.innerText = answer;
+            answerElement.style.marginTop = '10px';
+            document.getElementById('number-display').after(answerElement);
+            speak(answer);
+        });
+
+        document.getElementById('backToConfig').addEventListener('click', function() {
+            document.getElementById('config').style.display = 'block';
+            document.getElementById('study').style.display = 'none';
+            document.getElementById('from').value = '1';
+            document.getElementById('to').value = '99';
+            document.getElementById('answer').innerText = '';
+            document.getElementById('sinoButton').classList.remove('selected');
+            document.getElementById('nativeButton').classList.remove('selected');
+            selectedStyle = 'sino';
+        });
+
+        function updateNumberDisplay() {
+            document.getElementById('number-display').innerText = currentNumber.toLocaleString();
+        }
+
+        function getRandomNumber(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function getSinoKorean(number) {
+            let result = "";
+            if (number <= 10) {
+                result = sinoNumbers[number - 1];
+            } else if (number < 100) {
+                const tens = Math.floor(number / 10);
+                const ones = number % 10;
+                result = tens > 1 ? sinoNumbers[tens - 1] + "십" : "십";
+                if (ones > 0) {
+                    result += sinoNumbers[ones - 1];
+                }
+            } else if (number < 1000) {
+                const hundreds = Math.floor(number / 100);
+                const remainder = number % 100;
+                result = (hundreds > 1 ? sinoNumbers[hundreds - 1] : "") + "백";
+                if (remainder > 0) {
+                    result += getSinoKorean(remainder);
+                }
+            } else if (number < 10000) {
+                const thousands = Math.floor(number / 1000);
+                const remainder = number % 1000;
+                result = "천";
+                if (thousands > 1) {
+                    result = sinoNumbers[thousands - 1] + result;
+                }
+                if (remainder > 0) {
+                    result += getSinoKorean(remainder);
+                }
+            } else if (number < 100000) {
+                const tenThousands = Math.floor(number / 10000);
+                const remainder = number % 10000;
+                result = "만";
+                if (tenThousands > 1) {
+                    result = sinoNumbers[tenThousands - 1] + result;
+                }
+                if (remainder > 0) {
+                    result += getSinoKorean(remainder);
+                }
+            } else if (number < 1000000) {
+                const hundredThousands = Math.floor(number / 10000);
+                const remainder = number % 10000;
+                result = getSinoKorean(hundredThousands) + "만";
+                if (remainder > 0) {
+                    result += getSinoKorean(remainder);
+                }
+            } else {
+                const millions = Math.floor(number / 10000);
+                const remainder = number % 10000;
+                result = getSinoKorean(millions) + "만";
+                if (remainder > 0) {
+                    result += getSinoKorean(remainder);
+                }
+            }
+            return result;
+        }
+
+        function getNativeKorean(number) {
+            let result = "";
+            if (number <= 10) {
+                result = nativeNumbers[number - 1];
+            } else if (number < 100) {
+                const tens = Math.floor(number / 10);
+                const ones = number % 10;
+                const tensNames = ["", "열", "스물", "서른", "마흔", "쉰", "예순", "일흔", "여든", "아흔"];
+                result = tensNames[tens];
+                if (ones > 0) {
+                    result += " " + nativeNumbers[ones - 1];
+                }
+            } else {
+                result = number.toString();
+            }
+            return result;
+        }
+
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ko-KR';
+            window.speechSynthesis.speak(utterance);
+        }
+    </script>
+</body>
+</html>
